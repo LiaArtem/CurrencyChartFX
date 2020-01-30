@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="currencychart.currencychart_Controller">
+   <bottom>
+      <GridPane hgap="10.0" prefHeight="122.0" prefWidth="1176.0" style="-fx-border-style: solid; -fx-border-width: 1;" BorderPane.alignment="CENTER">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" maxWidth="495.0" minWidth="10.0" prefWidth="156.0" />
+          <ColumnConstraints hgrow="SOMETIMES" maxWidth="1043.0" minWidth="7.0" prefWidth="78.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1043.0" minWidth="10.0" prefWidth="74.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1043.0" minWidth="10.0" prefWidth="77.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1043.0" minWidth="10.0" prefWidth="133.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1043.0" minWidth="10.0" prefWidth="78.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1043.0" minWidth="10.0" prefWidth="126.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1043.0" minWidth="10.0" prefWidth="74.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1043.0" minWidth="10.0" prefWidth="302.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <Label text="Валюта:">
+               <GridPane.margin>
+                  <Insets left="10.0" />
+               </GridPane.margin></Label>
+            <ComboBox fx:id="curr_code" GridPane.rowIndex="1">
+               <GridPane.margin>
+                  <Insets left="10.0" />
+               </GridPane.margin></ComboBox>
+            <Label text="Год" GridPane.columnIndex="1" />
+            <Label text="Диапазон (-)" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Label text="Диапазон (+)" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+            <ComboBox fx:id="year_com" GridPane.columnIndex="2" />
+            <TextField fx:id="minus_year" prefHeight="25.0" prefWidth="148.0" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+            <TextField fx:id="plus_month" prefHeight="25.0" prefWidth="206.0" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+            <Label text="Месяц" GridPane.columnIndex="3" />
+            <Label text="Диапазон (-)" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+            <TextField fx:id="minus_month" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+            <ComboBox fx:id="month_com" GridPane.columnIndex="4" />
+            <CheckBox fx:id="check_month" mnemonicParsing="false" prefHeight="17.0" prefWidth="223.0" selected="true" text="Настройки - Месяц" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+            <Label text="День" GridPane.columnIndex="5" />
+            <Label text="Диапазон (-)" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+            <Label text="Диапазон (+)" GridPane.columnIndex="5" GridPane.rowIndex="2" />
+            <ComboBox fx:id="day_com" GridPane.columnIndex="6" />
+            <TextField fx:id="minus_day" GridPane.columnIndex="6" GridPane.rowIndex="1" />
+            <TextField fx:id="plus_day" GridPane.columnIndex="6" GridPane.rowIndex="2" />
+            <CheckBox fx:id="check_day" mnemonicParsing="false" selected="true" text="Настройки - День" GridPane.columnIndex="6" GridPane.rowIndex="3" />
+            <Button fx:id="Calc_button" mnemonicParsing="false" onAction="#Calc_buttonActionPerformed" prefHeight="25.0" prefWidth="293.0" text="Обновить график" GridPane.columnIndex="8" />
+            <Button fx:id="button_kurs_nbu" mnemonicParsing="false" onAction="#button_kurs_nbuActionPerformed" prefHeight="25.0" prefWidth="294.0" text="Ссылка на курсы НБУ (экспорт в JSON)" GridPane.columnIndex="8" GridPane.rowIndex="1" />
+            <CheckBox fx:id="visible_points" mnemonicParsing="false" selected="true" text="Отображать значения в точках" GridPane.columnIndex="8" GridPane.rowIndex="2" />
+            <CheckBox fx:id="sred_value_valut" mnemonicParsing="false" selected="true" text="Среднее значение валюты" GridPane.columnIndex="8" GridPane.rowIndex="3" />
+         </children>
+         <BorderPane.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </BorderPane.margin>
+      </GridPane>
+   </bottom>
+   <center>
+      <LineChart fx:id="lchart" BorderPane.alignment="CENTER">
+        <xAxis>
+          <CategoryAxis side="BOTTOM" fx:id="xAxis"/>
+        </xAxis>
+        <yAxis>
+          <NumberAxis side="LEFT" fx:id="yAxis"/>
+        </yAxis>
+      </LineChart>
+   </center>
+</BorderPane>
