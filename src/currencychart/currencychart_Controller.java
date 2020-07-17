@@ -262,8 +262,8 @@ public class currencychart_Controller {
         //Official hrivnya exchange rates.json - en
         //Офіційний курс гривні щодо іноземних валют.json - uk
         String m_file_name = file.getName();
-        if (m_file_name.equals("Official hrivnya exchange rates.json")) { p_name_date = "Date"; p_name_rate = "Unit"; p_name_kurs = "Official hrivnya exchange rates"; }
-        else if (m_file_name.equals("Офіційний курс гривні щодо іноземних валют.json")) { p_name_date = "Дата"; p_name_rate = "Кількість одиниць"; p_name_kurs = "Офіційний курс гривні"; }
+        if (m_file_name.equals("Official hrivnya exchange rates.json")) { p_name_date = "Date"; p_name_rate = "Unit"; p_name_kurs = "Official hrivnya exchange rates, UAH"; }
+        else if (m_file_name.equals("Офіційний курс гривні щодо іноземних валют.json")) { p_name_date = "Дата"; p_name_rate = "Кількість одиниць"; p_name_kurs = "Офіційний курс гривні, грн"; }
 
         if (file.isFile()) {
             try {
