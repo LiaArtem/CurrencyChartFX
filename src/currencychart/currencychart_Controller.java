@@ -3,6 +3,7 @@ package currencychart;
 import com.google.gson.stream.JsonReader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.chart.CategoryAxis;
@@ -12,15 +13,23 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
 import java.io.*;
 import java.net.URI;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.net.URL;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -36,6 +45,7 @@ public class currencychart_Controller {
                                                                                     "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
                                                                                     "21", "22", "23", "24", "25", "26", "27", "28", "29", "30",
                                                                                     "31");
+    private ObservableList<String> source_code_List = FXCollections.observableArrayList("Из файла JSON", "С сайта НБУ");
     private static String tec_kat = new File("").getAbsolutePath();
     private static String tec_kat_kurs = tec_kat + /*File.separator + "dist" +*/ File.separator + "kurs";
 
@@ -57,10 +67,12 @@ public class currencychart_Controller {
     @FXML private LineChart<String, Number> lchart;
     @FXML private CategoryAxis xAxis;
     @FXML private NumberAxis yAxis;
+    @FXML private ComboBox<String> source_code;
+    @FXML private CheckBox del_cache_file;
+    @FXML private CheckBox not_create_cache_file;
 
     @FXML
-    private void initialize()
-    {
+    private void initialize() throws TransformerException {
         // в интерфейсе
         // по умолчанию - валюта
         curr_code.setItems(curr_code_List);
@@ -91,12 +103,20 @@ public class currencychart_Controller {
         plus_day.setText("15");
         check_day.setSelected(true);
 
+        // по умолчанию - источник
+        source_code.setItems(source_code_List);
+        source_code.getSelectionModel().select(0); // первое значение
+        del_cache_file.setDisable(true);
+        del_cache_file.setSelected(false);
+        not_create_cache_file.setDisable(true);
+        not_create_cache_file.setSelected(false);
+
         Calc_range();
     }
 
     // кнопка - Обновить график
     @FXML
-    private void Calc_buttonActionPerformed() throws IOException {
+    private void Calc_buttonActionPerformed() throws IOException, TransformerException {
         // Обновить график
         // расчет диапазонов и вывод данных
         Calc_range();
@@ -115,7 +135,21 @@ public class currencychart_Controller {
         }
     }
 
-    private void Calc_range() {
+    // поле со списком - источник данных
+    @FXML
+    private void source_codeAction(ActionEvent event) {
+        // блокируем кнопку если из сайта
+        button_kurs_nbu.setDisable(false);
+        del_cache_file.setDisable(true);
+        not_create_cache_file.setDisable(true);
+        if (source_code.getSelectionModel().getSelectedIndex() == 1) {
+            button_kurs_nbu.setDisable(true);
+            del_cache_file.setDisable(false);
+            not_create_cache_file.setDisable(false);
+        }
+    }
+
+    private void Calc_range() throws TransformerException {
         Calendar now = Calendar.getInstance();   // Gets the current date and time
         int year = now.get(Calendar.YEAR);       // The current year        
         int year_now = year;
@@ -124,12 +158,9 @@ public class currencychart_Controller {
         int m_is_sred_value_valut;
         int m_is_visible_points;
 
-
         // год
-        Date[] mDate1 = new Date [mYear];
-        Date[] mDate2 = new Date [mYear];
-        LocalDate ldate;
-        LocalDateTime localDateTime;
+        LocalDate[] mDate1 = new LocalDate [mYear];
+        LocalDate[] mDate2 = new LocalDate [mYear];
 
         year = year_now - mYear + 1;
         for (int i = 0; i <= mYear - 1; i++) {
@@ -142,24 +173,17 @@ public class currencychart_Controller {
                 int mDayS = day_com.getSelectionModel().getSelectedIndex();
 
                 // стартовая дата        
-                ldate = LocalDate.parse ("01." + String.format("%2s", mMonthS).replace(' ', '0') + "." + year , DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ) );
-                mDate1[i] = Date.from(ldate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                mDate1[i] = LocalDate.parse ("01." + String.format("%2s", mMonthS).replace(' ', '0') + "." + year , DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ) );
                 // выходим на день
                 if (mDayS > 0) {
-                    localDateTime = mDate1[i].toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                    localDateTime = localDateTime.plusDays(mDayS);
-                    mDate1[i] = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+                    mDate1[i] = mDate1[i].plusDays(mDayS);
                 }
                 // минус дней
                 if ((int) Main.getString_Float(minus_day.getText()) > 0) {
-                    localDateTime = mDate1[i].toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                    localDateTime = localDateTime.minusDays((int) Main.getString_Float(minus_day.getText()));
-                    mDate1[i] = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+                    mDate1[i] = mDate1[i].minusDays((int) Main.getString_Float(minus_day.getText()));
                 }
                 // плюс необходимое кол-во дней
-                localDateTime = mDate1[i].toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                localDateTime = localDateTime.plusDays(mDay);
-                mDate2[i] = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+                mDate2[i] = mDate1[i].plusDays(mDay);
             }
             // месяц
             else if (check_month.isSelected()) {
@@ -171,23 +195,16 @@ public class currencychart_Controller {
                     if (i == 0) { year = year - 1; }
                 }
 
-                ldate = LocalDate.parse ( "01." + String.format("%2s", mMonthS).replace(' ', '0') + "." + year , DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ) );
-                mDate1[i] = Date.from(ldate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                mDate1[i] = LocalDate.parse ( "01." + String.format("%2s", mMonthS).replace(' ', '0') + "." + year , DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ) );
                 // плюс необходимо кол-во месяцев
-                localDateTime = mDate1[i].toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                localDateTime = localDateTime.plusMonths(mMonth);
-                mDate2[i] = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+                mDate2[i] = mDate1[i].plusMonths(mMonth);
                 // минус 1 день
-                localDateTime = mDate2[i].toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                localDateTime = localDateTime.minusDays(1);
-                mDate2[i] = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+                mDate2[i] = mDate2[i].minusDays(1);
             }
             // год
             else {
-                ldate = LocalDate.parse ( "01.01." + year , DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ) );
-                mDate1[i] = Date.from(ldate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-                ldate = LocalDate.parse ( "31.12." + year , DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ) );
-                mDate2[i] = Date.from(ldate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                mDate1[i] = LocalDate.parse ( "01.01." + year , DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ));
+                mDate2[i] = LocalDate.parse ( "31.12." + year , DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ));
             }
 
             year++;
@@ -195,8 +212,14 @@ public class currencychart_Controller {
 
         // добавляем в панель - график
         String mCurrCode = curr_code.getSelectionModel().getSelectedItem().substring(0, 3);
-        String[][] mArray;
-        mArray = getKursNbu(mCurrCode, mDate1, mDate2);
+        String[][] mArray = null;
+
+        int source_index = source_code.getSelectionModel().getSelectedIndex();
+        if (source_index == 0) {
+            mArray = getKursNbu(mCurrCode, mDate1, mDate2);
+        } else if (source_index == 1) {
+            mArray = getKursNbu_WEB(mCurrCode, mDate1, mDate2);
+        }
 
         // считать среднее значение
         m_is_sred_value_valut = 0;
@@ -211,28 +234,15 @@ public class currencychart_Controller {
     }
 
     // Получить курс НБУ
-    private String [][] getKursNbu(String mCurrCode, Date [] mDate1, Date [] mDate2)
+    private String [][] getKursNbu(String mCurrCode, LocalDate [] mDate1, LocalDate [] mDate2)
     {
         String mPath = tec_kat_kurs + File.separator + mCurrCode;
-        LocalDate localDate;
-        String tDate;
-        String tDate_json;
-        LocalDateTime localDateTime;
         File file = null;
         String p_name_date = ""; String p_name_rate = ""; String p_name_kurs = "";
         double m_rate = 100;
-        int days = 0;
-        int daysp = 0;
-        Date mDate;
         String [][] mArray = new String[2][];
         ArrayList<String> mArray_Date = new ArrayList<String>();
         ArrayList<String> mArray_Kurs = new ArrayList<String>();
-
-        // определяем размер массива
-        //for (int i = 0; i < mDate1.length; i++) {
-        //    days = days + (int)( (mDate2[i].getTime() - mDate1[i].getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        //}
-        //mArray = new String [2][days];
 
         ////////////////////////////////////////////////////////////////////////////////////
         // https://bank.gov.ua/control/uk/curmetal/currency/search/form/period
@@ -294,10 +304,10 @@ public class currencychart_Controller {
                 // после получения списков, заполняем массив нужными данными
                 Integer num = 0;
                 for (int i = 0; i < mDate1.length; i++) {
-                    DateFormat format = new SimpleDateFormat("dd.MM.yyyy");
                     Integer num_list = 0;
                     for (String list : listDate) {
-                        if (format.parse(list).compareTo(mDate1[i]) >= 0 && format.parse(list).compareTo(mDate2[i]) <= 0) {
+                        LocalDate list_date = getDateString(list);
+                        if (list_date.compareTo(mDate1[i]) >= 0 && list_date.compareTo(mDate2[i]) <= 0) {
                             // преобразование DD.MM.YYYY в YYYYMMDD
                             list = list.substring(6, 10) + list.substring(3, 5) + list.substring(0, 2);
                             mArray_Date.add(list);
@@ -317,11 +327,164 @@ public class currencychart_Controller {
                 mArray[0] = mArray_Date.toArray(new String[mArray_Date.size()]);
                 mArray[1] = mArray_Kurs.toArray(new String[mArray_Kurs.size()]);
 
-            } catch (IOException | ParseException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 Main.MessageBoxError(e.toString(), "");
             }
         }
+        return mArray;
+    }
+
+    // Получить курс НБУ (Онлайн)
+    private String [][] getKursNbu_WEB(String mCurrCode, LocalDate [] mDate1, LocalDate [] mDate2) throws TransformerException {
+        String mPath = tec_kat_kurs + File.separator + mCurrCode;
+        File file;
+        String mPathXml;
+        String [][] mArray = new String[2][];
+        ArrayList<String> mArray_Date = new ArrayList<String>();
+        ArrayList<String> mArray_Kurs = new ArrayList<String>();
+        String p_periodStartTime;
+        String p_periodEndTime;
+        int p_currency_id = 0;
+        //
+        p_periodStartTime = mDate1[0].format(DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ));
+        p_periodEndTime = mDate2[mDate2.length - 1].format(DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ));
+        //
+        if (mCurrCode.equals("USD")) { p_currency_id = 169; }
+        else if (mCurrCode.equals("EUR")) { p_currency_id = 196; }
+        else if (mCurrCode.equals("GBP")) { p_currency_id = 163; }
+
+        // действия, если папка не существует, создаем
+        new File(mPath).mkdirs();
+
+        mPathXml = mPath + File.separator + "search_results (" + p_periodStartTime + " - " + p_periodEndTime + ").xml";
+        file = new File(mPathXml);
+
+        // Удаляет Кеш файл
+        if (del_cache_file.isSelected() == true) {
+            file.delete();
+            file = new File(mPathXml);
+        }
+
+        // не сохранять на диске
+        if (not_create_cache_file.isSelected() == true) {
+            file = new File("");
+        }
+
+        Document doc = null; // документ xml
+        // Если нет файла взять его с сайта
+        if (file.exists() == false) {
+            ////////////////////////////////////////////////////////////////////////////////////
+            // чтение файла с НБУ
+            // https://old.bank.gov.ua/control/uk/curmetal/currency/search?formType=searchPeriodForm&time_step=daily&currency=169&periodStartTime=01.11.2018&periodEndTime=02.11.2018&outer=xml&execute=%D0%92%D0%B8%D0%BA%D0%BE%D0%BD%D0%B0%D1%82%D0%B8
+            try {
+                URL xmlURL = new URL("https://old.bank.gov.ua/control/uk/curmetal/currency/search?formType=searchPeriodForm&time_step=daily&currency=" + p_currency_id + "&periodStartTime=" + p_periodStartTime + "&periodEndTime=" + p_periodEndTime + "&outer=xml&execute=%D0%92%D0%B8%D0%BA%D0%BE%D0%BD%D0%B0%D1%82%D0%B8");
+                InputStream xml = xmlURL.openStream();
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                DocumentBuilder db = dbf.newDocumentBuilder();
+                doc = db.parse(xml);
+                xml.close();
+                // не сохранять на диске (выключено)
+                if (not_create_cache_file.isSelected() == false) {
+                    // сохранение на локальном диске
+                    Transformer transformer = TransformerFactory.newInstance().newTransformer();
+                    Source source = new DOMSource(doc);
+                    Result result = new StreamResult(new FileOutputStream(mPathXml));
+                    transformer.transform(source, result);
+                    // перечитать созданный файл
+                    file = new File(mPathXml);
+                }
+            }
+            catch (IOException | ParserConfigurationException | SAXException | TransformerConfigurationException e){
+                e.printStackTrace();
+                Main.MessageBoxError(e.toString(), "");
+            }
+        }
+
+        try {
+            List<String> listDate = new ArrayList<>();
+            List<Double> listKurs = new ArrayList<>();
+            LocalDate m_date_old = null;
+            // чтение XML файла
+            // не сохранять на диске (выключено)
+            if (not_create_cache_file.isSelected() == false) {
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                DocumentBuilder db = dbf.newDocumentBuilder();
+                doc = db.parse(file);
+            }
+            doc.getDocumentElement().normalize();
+            NodeList nodeLst = doc.getElementsByTagName("currency");
+            for (int s = 0; s < nodeLst.getLength(); s++) {
+                org.w3c.dom.Node fstNode = nodeLst.item(s);
+                if (fstNode.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
+                    Element fstElmnt = (Element) fstNode;
+                    Element message = (Element) fstElmnt.getElementsByTagName("date").item(0);
+                    String date_text = message.getTextContent();
+                    message = (Element) fstElmnt.getElementsByTagName("exchange_rate").item(0);
+                    String kurs_text = (message.getTextContent().replace(",", "."));
+                    message = (Element) fstElmnt.getElementsByTagName("number_of_units").item(0);
+                    String rate_text = message.getTextContent();
+
+                    LocalDate m_date = getDateString(date_text);
+                    int kol_day = Period.between(mDate1[0], m_date).getDays();
+                    // если в начале не хватает курсов дополняем
+                    if (s == 0 && kol_day > 0) {
+                        LocalDate m_date_temp = mDate1[0];
+                        for (int k = 0; k < kol_day; k++) {
+                            listDate.add(m_date_temp.format(DateTimeFormatter.ofPattern ( "dd.MM.yyyy" )));      // дата
+                            listKurs.add((double) (Float.parseFloat(kurs_text) / Float.parseFloat(rate_text)));
+                            m_date_temp = m_date_temp.plusDays(1);
+                        }
+                    }
+                    // восстанавливаем курсы если есть пустые участки
+                    if (s > 0) {
+                        kol_day = Period.between(m_date_old, m_date).getDays();
+                        if (kol_day > 1) {
+                            LocalDate m_date_temp = m_date_old;
+                            for (int k = 0; k < kol_day - 1; k++) {
+                                m_date_temp = m_date_temp.plusDays(1);
+                                listDate.add(m_date_temp.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));      // дата
+                                listKurs.add((double) (Float.parseFloat(kurs_text) / Float.parseFloat(rate_text)));
+                            }
+                        }
+                    }
+
+                    listDate.add(date_text);      // дата
+                    listKurs.add((double) (Float.parseFloat(kurs_text) / Float.parseFloat(rate_text)));
+                    m_date_old = m_date;
+                }
+            }
+
+            // после получения списков, заполняем массив нужными данными
+            Integer num = 0;
+            for (int i = 0; i < mDate1.length; i++) {
+                Integer num_list = 0;
+                for (String list : listDate) {
+                    LocalDate list_date = getDateString(list);
+                    if (list_date.compareTo(mDate1[i]) >= 0 && list_date.compareTo(mDate2[i]) <= 0) {
+                        // преобразование DD.MM.YYYY в YYYYMMDD
+                        list = list.substring(6, 10) + list.substring(3, 5) + list.substring(0, 2);
+                        mArray_Date.add(list);
+                        mArray_Kurs.add(listKurs.get(num_list).toString());
+                        num++;
+                    }
+                    num_list++;
+                }
+            }
+
+            if (mArray_Date.size() == 0) {
+                Main.MessageBoxError("Курсы не загружены, возможно изменилась структура", "");
+            }
+
+            // переносим в общий массив
+            mArray[0] = mArray_Date.toArray(new String[mArray_Date.size()]);
+            mArray[1] = mArray_Kurs.toArray(new String[mArray_Kurs.size()]);
+
+        } catch (IOException | ParserConfigurationException | SAXException e) {
+            e.printStackTrace();
+            Main.MessageBoxError(e.toString(), "");
+        }
+
         return mArray;
     }
 
@@ -436,12 +599,16 @@ public class currencychart_Controller {
 
         // Всплывающие подсказки в узлах
         if (is_visible_points == 1) {
-            ObservableList<XYChart.Data> dataList = ((XYChart.Series) lchart.getData().get(0)).getData();
-            dataList.forEach(data -> {
-                Node node = data.getNode();
-                Tooltip tooltip = new Tooltip('(' + data.getXValue().toString() + ';' + data.getYValue().toString() + ')');
-                Tooltip.install(node, tooltip);
-            });
+            int kol_charts = lchart.getData().size();
+            for (int k = 0; k < kol_charts; k++) {
+                ObservableList<XYChart.Data> dataList = ((XYChart.Series) lchart.getData().get(k)).getData();
+                dataList.forEach(data -> {
+                    Node node = data.getNode();
+                    //Tooltip tooltip = new Tooltip('(' + data.getXValue().toString() + ';' + data.getYValue().toString() + ')');
+                    Tooltip tooltip = new Tooltip(data.getYValue().toString());
+                    Tooltip.install(node, tooltip);
+                });
+            }
         }
     }
 
@@ -457,13 +624,11 @@ public class currencychart_Controller {
         }
     }
 
-    public Date getDateString(String m_date)
+    public LocalDate getDateString(String m_date)
     {
         if (isDateValid(m_date) == false) { return null; }
         DateTimeFormatter f = DateTimeFormatter.ofPattern ( "dd.MM.yyyy" );
-        LocalDate ldate = LocalDate.parse ( m_date , f );
-        Date date = Date.from(ldate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        return date;
+        return LocalDate.parse ( m_date , f );
     }
 
     public Integer getIntegerDate(String m_date)

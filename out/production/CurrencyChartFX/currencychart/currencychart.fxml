@@ -59,6 +59,18 @@
             <Button fx:id="button_kurs_nbu" mnemonicParsing="false" onAction="#button_kurs_nbuActionPerformed" prefHeight="25.0" prefWidth="294.0" text="Ссылка на курсы НБУ (экспорт в JSON)" GridPane.columnIndex="8" GridPane.rowIndex="1" />
             <CheckBox fx:id="visible_points" mnemonicParsing="false" selected="true" text="Отображать значения в точках" GridPane.columnIndex="8" GridPane.rowIndex="2" />
             <CheckBox fx:id="sred_value_valut" mnemonicParsing="false" selected="true" text="Среднее значение валюты" GridPane.columnIndex="8" GridPane.rowIndex="3" />
+            <Label text="Источник данных:" GridPane.rowIndex="2">
+               <padding>
+                  <Insets left="10.0" />
+               </padding>
+            </Label>
+            <ComboBox fx:id="source_code" onAction="#source_codeAction" GridPane.rowIndex="3">
+               <GridPane.margin>
+                  <Insets left="10.0" />
+               </GridPane.margin>
+            </ComboBox>
+            <CheckBox fx:id="del_cache_file" mnemonicParsing="false" prefHeight="17.0" prefWidth="223.0" selected="true" text="Удалить Кеш файл" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.rowIndex="3" />
+            <CheckBox fx:id="not_create_cache_file" mnemonicParsing="false" prefHeight="17.0" prefWidth="223.0" selected="true" text="Не создавать Кеш файл" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.rowIndex="2" />
          </children>
          <BorderPane.margin>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
@@ -68,10 +80,10 @@
    <center>
       <LineChart fx:id="lchart" BorderPane.alignment="CENTER">
         <xAxis>
-          <CategoryAxis side="BOTTOM" fx:id="xAxis"/>
+          <CategoryAxis side="BOTTOM" fx:id="xAxis" />
         </xAxis>
         <yAxis>
-          <NumberAxis side="LEFT" fx:id="yAxis"/>
+          <NumberAxis fx:id="yAxis" side="LEFT" />
         </yAxis>
       </LineChart>
    </center>
