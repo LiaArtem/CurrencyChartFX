@@ -3,10 +3,8 @@ package currencychart;
 import com.google.gson.stream.JsonReader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -28,26 +26,26 @@ import java.awt.*;
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 
 public class currencychart_Controller {
 
-    private ObservableList<String> curr_code_List = FXCollections.observableArrayList("USD-Доллар США", "EUR-Евро", "GBP-Фунт");
-    private ObservableList<String> month_com_List = FXCollections.observableArrayList("01-Январь", "02-Февраль", "03-Март", "04-Апрель",
+    private final ObservableList<String> curr_code_List = FXCollections.observableArrayList("USD-Доллар США", "EUR-Евро", "GBP-Фунт");
+    private final ObservableList<String> month_com_List = FXCollections.observableArrayList("01-Январь", "02-Февраль", "03-Март", "04-Апрель",
                                                                                 "05-Май", "06-Июнь", "07-Июль", "08-Август",
                                                                                 "09-Сентябрь", "10-Октябрь", "11-Ноябрь", "12-Декабрь");
-    private ObservableList<String> day_com_List = FXCollections.observableArrayList("01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
+    private final ObservableList<String> day_com_List = FXCollections.observableArrayList("01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
                                                                                     "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
                                                                                     "21", "22", "23", "24", "25", "26", "27", "28", "29", "30",
                                                                                     "31");
-    private ObservableList<String> source_code_List = FXCollections.observableArrayList("Из файла JSON", "С сайта НБУ");
-    private static String tec_kat = new File("").getAbsolutePath();
-    private static String tec_kat_kurs = tec_kat + /*File.separator + "dist" +*/ File.separator + "kurs";
+    private final ObservableList<String> source_code_List = FXCollections.observableArrayList("Из файла JSON", "С сайта НБУ");
+    private static final String tec_kat = new File("").getAbsolutePath();
+    private static final String tec_kat_kurs = tec_kat + /*File.separator + "dist" +*/ File.separator + "kurs";
 
     @FXML private ComboBox<String> curr_code;
     @FXML private ComboBox<String> year_com;
@@ -62,10 +60,10 @@ public class currencychart_Controller {
     @FXML private CheckBox check_day;
     @FXML private CheckBox sred_value_valut;
     @FXML private CheckBox visible_points;
-    @FXML private Button Calc_button;
+    //@FXML private Button Calc_button;
     @FXML private Button button_kurs_nbu;
     @FXML private LineChart<String, Number> lchart;
-    @FXML private CategoryAxis xAxis;
+    //@FXML private CategoryAxis xAxis;
     @FXML private NumberAxis yAxis;
     @FXML private ComboBox<String> source_code;
     @FXML private CheckBox del_cache_file;
@@ -116,7 +114,7 @@ public class currencychart_Controller {
 
     // кнопка - Обновить график
     @FXML
-    private void Calc_buttonActionPerformed() throws IOException, TransformerException {
+    private void Calc_buttonActionPerformed() throws TransformerException {
         // Обновить график
         // расчет диапазонов и вывод данных
         Calc_range();
@@ -137,7 +135,7 @@ public class currencychart_Controller {
 
     // поле со списком - источник данных
     @FXML
-    private void source_codeAction(ActionEvent event) {
+    private void source_codeAction() {
         // блокируем кнопку если из сайта
         button_kurs_nbu.setDisable(false);
         del_cache_file.setDisable(true);
@@ -241,8 +239,8 @@ public class currencychart_Controller {
         String p_name_date = ""; String p_name_rate = ""; String p_name_kurs = "";
         double m_rate = 100;
         String [][] mArray = new String[2][];
-        ArrayList<String> mArray_Date = new ArrayList<String>();
-        ArrayList<String> mArray_Kurs = new ArrayList<String>();
+        ArrayList<String> mArray_Date = new ArrayList<>();
+        ArrayList<String> mArray_Kurs = new ArrayList<>();
 
         ////////////////////////////////////////////////////////////////////////////////////
         // https://bank.gov.ua/control/uk/curmetal/currency/search/form/period
@@ -285,7 +283,7 @@ public class currencychart_Controller {
                     reader.beginObject();
                     while (reader.hasNext()) {
                         String name = reader.nextName();
-                        String name_conv = new String(name.getBytes(), "UTF-8");
+                        String name_conv = new String(name.getBytes(), StandardCharsets.UTF_8);
                         if (name_conv.equals(p_name_date)) {
                             listDate.add(reader.nextString());      // дата
                         } else if (name_conv.equals(p_name_rate)) {        // количество
@@ -302,9 +300,8 @@ public class currencychart_Controller {
                 reader.close();
 
                 // после получения списков, заполняем массив нужными данными
-                Integer num = 0;
                 for (int i = 0; i < mDate1.length; i++) {
-                    Integer num_list = 0;
+                    int num_list = 0;
                     for (String list : listDate) {
                         LocalDate list_date = getDateString(list);
                         if (list_date.compareTo(mDate1[i]) >= 0 && list_date.compareTo(mDate2[i]) <= 0) {
@@ -312,7 +309,6 @@ public class currencychart_Controller {
                             list = list.substring(6, 10) + list.substring(3, 5) + list.substring(0, 2);
                             mArray_Date.add(list);
                             mArray_Kurs.add(listKurs.get(num_list).toString());
-                            num++;
                         }
                         num_list++;
                     }
@@ -324,8 +320,8 @@ public class currencychart_Controller {
                 }
 
                 // переносим в общий массив
-                mArray[0] = mArray_Date.toArray(new String[mArray_Date.size()]);
-                mArray[1] = mArray_Kurs.toArray(new String[mArray_Kurs.size()]);
+                mArray[0] = mArray_Date.toArray(new String[0]);
+                mArray[1] = mArray_Kurs.toArray(new String[0]);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -341,8 +337,8 @@ public class currencychart_Controller {
         File file;
         String mPathXml;
         String [][] mArray = new String[2][];
-        ArrayList<String> mArray_Date = new ArrayList<String>();
-        ArrayList<String> mArray_Kurs = new ArrayList<String>();
+        ArrayList<String> mArray_Date = new ArrayList<>();
+        ArrayList<String> mArray_Kurs = new ArrayList<>();
         String p_periodStartTime;
         String p_periodEndTime;
         int p_currency_id = 0;
@@ -350,9 +346,17 @@ public class currencychart_Controller {
         p_periodStartTime = mDate1[0].format(DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ));
         p_periodEndTime = mDate2[mDate2.length - 1].format(DateTimeFormatter.ofPattern ( "dd.MM.yyyy" ));
         //
-        if (mCurrCode.equals("USD")) { p_currency_id = 169; }
-        else if (mCurrCode.equals("EUR")) { p_currency_id = 196; }
-        else if (mCurrCode.equals("GBP")) { p_currency_id = 163; }
+        switch (mCurrCode) {
+            case "USD":
+                p_currency_id = 169;
+                break;
+            case "EUR":
+                p_currency_id = 196;
+                break;
+            case "GBP":
+                p_currency_id = 163;
+                break;
+        }
 
         // действия, если папка не существует, создаем
         new File(mPath).mkdirs();
@@ -361,19 +365,19 @@ public class currencychart_Controller {
         file = new File(mPathXml);
 
         // Удаляет Кеш файл
-        if (del_cache_file.isSelected() == true) {
+        if (del_cache_file.isSelected()) {
             file.delete();
             file = new File(mPathXml);
         }
 
         // не сохранять на диске
-        if (not_create_cache_file.isSelected() == true) {
+        if (not_create_cache_file.isSelected()) {
             file = new File("");
         }
 
         Document doc = null; // документ xml
         // Если нет файла взять его с сайта
-        if (file.exists() == false) {
+        if (!file.exists()) {
             ////////////////////////////////////////////////////////////////////////////////////
             // чтение файла с НБУ
             // https://old.bank.gov.ua/control/uk/curmetal/currency/search?formType=searchPeriodForm&time_step=daily&currency=169&periodStartTime=01.11.2018&periodEndTime=02.11.2018&outer=xml&execute=%D0%92%D0%B8%D0%BA%D0%BE%D0%BD%D0%B0%D1%82%D0%B8
@@ -385,7 +389,7 @@ public class currencychart_Controller {
                 doc = db.parse(xml);
                 xml.close();
                 // не сохранять на диске (выключено)
-                if (not_create_cache_file.isSelected() == false) {
+                if (!not_create_cache_file.isSelected()) {
                     // сохранение на локальном диске
                     Transformer transformer = TransformerFactory.newInstance().newTransformer();
                     Source source = new DOMSource(doc);
@@ -407,11 +411,12 @@ public class currencychart_Controller {
             LocalDate m_date_old = null;
             // чтение XML файла
             // не сохранять на диске (выключено)
-            if (not_create_cache_file.isSelected() == false) {
+            if (!not_create_cache_file.isSelected()) {
                 DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
                 DocumentBuilder db = dbf.newDocumentBuilder();
                 doc = db.parse(file);
             }
+            assert doc != null;
             doc.getDocumentElement().normalize();
             NodeList nodeLst = doc.getElementsByTagName("currency");
             for (int s = 0; s < nodeLst.getLength(); s++) {
@@ -432,12 +437,13 @@ public class currencychart_Controller {
                         LocalDate m_date_temp = mDate1[0];
                         for (int k = 0; k < kol_day; k++) {
                             listDate.add(m_date_temp.format(DateTimeFormatter.ofPattern ( "dd.MM.yyyy" )));      // дата
-                            listKurs.add((double) (Float.parseFloat(kurs_text) / Float.parseFloat(rate_text)));
+                            listKurs.add((double) Float.parseFloat(kurs_text) / Float.parseFloat(rate_text));
                             m_date_temp = m_date_temp.plusDays(1);
                         }
                     }
                     // восстанавливаем курсы если есть пустые участки
                     if (s > 0) {
+                        assert m_date_old != null;
                         kol_day = Period.between(m_date_old, m_date).getDays();
                         if (kol_day > 1) {
                             LocalDate m_date_temp = m_date_old;
@@ -456,9 +462,8 @@ public class currencychart_Controller {
             }
 
             // после получения списков, заполняем массив нужными данными
-            Integer num = 0;
             for (int i = 0; i < mDate1.length; i++) {
-                Integer num_list = 0;
+                int num_list = 0;
                 for (String list : listDate) {
                     LocalDate list_date = getDateString(list);
                     if (list_date.compareTo(mDate1[i]) >= 0 && list_date.compareTo(mDate2[i]) <= 0) {
@@ -466,7 +471,6 @@ public class currencychart_Controller {
                         list = list.substring(6, 10) + list.substring(3, 5) + list.substring(0, 2);
                         mArray_Date.add(list);
                         mArray_Kurs.add(listKurs.get(num_list).toString());
-                        num++;
                     }
                     num_list++;
                 }
@@ -477,8 +481,8 @@ public class currencychart_Controller {
             }
 
             // переносим в общий массив
-            mArray[0] = mArray_Date.toArray(new String[mArray_Date.size()]);
-            mArray[1] = mArray_Kurs.toArray(new String[mArray_Kurs.size()]);
+            mArray[0] = mArray_Date.toArray(new String[0]);
+            mArray[1] = mArray_Kurs.toArray(new String[0]);
 
         } catch (IOException | ParserConfigurationException | SAXException e) {
             e.printStackTrace();
@@ -496,7 +500,6 @@ public class currencychart_Controller {
         lchart.setAnimated(false);
 
         // Определяем годы
-        int m_year_end = Integer.parseInt(mArray[0][mArray[0].length - 1].substring(0, 4));
         int m_year_temp = Integer.parseInt(mArray[0][0].substring(0, 4));
         int m_year_etalon = m_year_temp;
 
@@ -507,7 +510,7 @@ public class currencychart_Controller {
         float m_sred_value = 0;
         if (is_sred_value_valut == 1) {
             // определяем сколько годов
-            int m_sred_num = 0;
+            int m_sred_num;
             int m_kol_year = Integer.parseInt(mArray[0][mArray[0].length - 1].substring(0, 4)) - Integer.parseInt(mArray[0][0].substring(0, 4)) + 1;
             mArraySred = new float [2][m_kol_year];
             int m_base_year = Integer.parseInt(mArray[0][0].substring(0, 4));
@@ -601,7 +604,8 @@ public class currencychart_Controller {
         if (is_visible_points == 1) {
             int kol_charts = lchart.getData().size();
             for (int k = 0; k < kol_charts; k++) {
-                ObservableList<XYChart.Data> dataList = ((XYChart.Series) lchart.getData().get(k)).getData();
+                ObservableList<XYChart.Data> dataList;
+                dataList = ((XYChart.Series) lchart.getData().get(k)).getData();
                 dataList.forEach(data -> {
                     Node node = data.getNode();
                     //Tooltip tooltip = new Tooltip('(' + data.getXValue().toString() + ';' + data.getYValue().toString() + ')');
@@ -614,7 +618,7 @@ public class currencychart_Controller {
 
     public boolean isDateValid(String m_date)
     {
-        if (m_date.isEmpty() == true) { return false; }
+        if (m_date.isEmpty()) { return false; }
         try {
             DateTimeFormatter f = DateTimeFormatter.ofPattern ( "dd.MM.yyyy" );
             LocalDate ldate = LocalDate.parse ( m_date , f );
@@ -626,19 +630,9 @@ public class currencychart_Controller {
 
     public LocalDate getDateString(String m_date)
     {
-        if (isDateValid(m_date) == false) { return null; }
+        if (!isDateValid(m_date)) { return null; }
         DateTimeFormatter f = DateTimeFormatter.ofPattern ( "dd.MM.yyyy" );
         return LocalDate.parse ( m_date , f );
-    }
-
-    public Integer getIntegerDate(String m_date)
-    {
-        if (isDateValid(m_date) == false) { return null; }
-        DateTimeFormatter f = DateTimeFormatter.ofPattern ( "dd.MM.yyyy" );
-        LocalDate ldate = LocalDate.parse ( m_date , f );
-        Date date = Date.from(ldate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Integer dateint = (int) date.getTime()/1000;
-        return dateint;
     }
 
 }
