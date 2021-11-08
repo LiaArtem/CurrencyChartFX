@@ -20,14 +20,11 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/javafx-sdk-11.0.2/lib" />
+          <root url="file://$MODULE_DIR$/javafx-sdk/lib" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES>
-          <root url="file://$MODULE_DIR$/javafx-sdk-11.0.2/lib" />
-        </SOURCES>
-        <jarDirectory url="file://$MODULE_DIR$/javafx-sdk-11.0.2/lib" recursive="false" />
-        <jarDirectory url="file://$MODULE_DIR$/javafx-sdk-11.0.2/lib" recursive="false" type="SOURCES" />
+        <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/javafx-sdk/lib" recursive="false" />
       </library>
     </orderEntry>
   </component>

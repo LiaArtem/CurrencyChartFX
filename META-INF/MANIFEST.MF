@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
 Main-Class: currencychart.Main
-Class-Path: lib/gson-2.2.2.jar
+Class-Path: lib/gson-2.8.5.jar
 

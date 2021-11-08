@@ -1,0 +1,8 @@
+Настройка JavaFX в IntelliJ IDEA Community Edition
+https://www.jetbrains.com/help/idea/javafx.html#check-plugin
+
+IntelliJ IDEA Community Edition
+File -> Settings -> Languages and Frameworks -> JavaFX -> Указать путь к SceneBuilder
+
+Папка при смене версии JavaFX не менять
+\javafx-sdk\
