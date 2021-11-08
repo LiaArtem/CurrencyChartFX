@@ -4,8 +4,11 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+
+import java.util.Optional;
 
 // библиотека разбора JSON - www.java2s.com/Code/JarDownload/gson/gson-2.2.2.jar.zip
 
@@ -62,4 +65,19 @@ public class Main extends Application {
         alert.showAndWait();
     }
 
+    // вывод диалогового окна - Да/Нет
+    static boolean MessageBoxYesNo(String infoMessage, String infoHeader)
+    {
+        //alert.showAndWait();
+        Alert alert = new Alert(Alert.AlertType.WARNING, "", ButtonType.YES, ButtonType.NO);
+        alert.setTitle("Предупреждение:");
+        alert.setHeaderText(infoHeader);
+        alert.setContentText(infoMessage);
+        Optional<ButtonType> result = alert.showAndWait();
+
+        if (result.get() == ButtonType.YES) {
+            return true;
+        }
+        return false;
+    }
 }
